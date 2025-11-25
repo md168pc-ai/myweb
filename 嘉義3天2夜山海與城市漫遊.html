@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>嘉義 3天2夜 山海與城市漫遊</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .timeline-line {
+            background: linear-gradient(to bottom, #3b82f6, #10b981, #f59e0b);
+        }
+
+        /* Animation classes */
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- Data ---
+    const tripData = {
+        title: "嘉義 3天2夜 山海與城市漫遊",
+        subtitle: "高雄出發 · 繪日之丘 · 阿里山森呼吸",
+        days: [
+            {
+                id: 1,
+                title: "Day 1",
+                theme: "城市美學與林業文化",
+                date: "City & Culture",
+                description: "探索嘉義「木都」日式氛圍，入住質感旅店。",
+                stats: { drive: "1.5 hr", cost: "~$1,700/2人" },
+                events: [
+                    { time: "09:00", title: "高雄出發", location: "高雄市", type: "transport", desc: "走國道1號前往嘉義，開啟美好旅程。", icon: "car" },
+                    { time: "10:30", title: "檜意森活村", location: "嘉義市檜意森活村", type: "spot", desc: "全台最大日式宿舍群，漫步檜木香氣中，品嚐「森坂及」冰淇淋。", icon: "camera" },
+                    { time: "12:30", title: "午餐：林聰明沙鍋魚頭", location: "林聰明沙鍋魚頭", type: "food", desc: "嘉義必吃美食！若人多可改吃附近的劉里長雞肉飯。", icon: "utensils" },
+                    { time: "14:30", title: "嘉義市立美術館 & 昭和十八", location: "嘉義市立美術館", type: "spot", desc: "新舊融合的絕美建築，隨後造訪全台最美神社咖啡廳。", icon: "coffee" },
+                    { time: "16:00", title: "Check-in 繪日之丘", location: "天成文旅-繪日之丘", type: "hotel", desc: "享用飯店提供的古早味零食，稍作休息。", icon: "bed" },
+                    { time: "18:00", title: "晚餐：文化路夜市", location: "嘉義文化路夜市", type: "food", desc: "推薦：郭家雞肉飯、御香屋葡萄柚綠茶、阿峨豆花。", icon: "moon" },
+                ]
+            },
+            {
+                id: 2,
+                title: "Day 2",
+                theme: "阿里山雲霧與鐵道便當",
+                date: "Mountain & Forest",
+                description: "早起攻頂阿里山，漫步雲端，回程順遊奮起湖。",
+                stats: { drive: "4 hr+", cost: "~$2,400/2人" },
+                events: [
+                    { time: "07:00", title: "飯店出發", location: "天成文旅-繪日之丘", type: "transport", desc: "建議提早出發，避開山區午後濃霧。", icon: "car" },
+                    { time: "09:30", title: "阿里山國家森林遊樂區", location: "阿里山國家森林遊樂區", type: "spot", desc: "搭乘小火車(沼平線)，漫步巨木群棧道，吸收芬多精。", icon: "tree" },
+                    { time: "13:00", title: "前往奮起湖", location: "阿里山公路", type: "transport", desc: "車程約 50-60 分鐘。", icon: "car" },
+                    { time: "14:00", title: "奮起湖老街 & 鐵路便當", location: "奮起湖老街", type: "food", desc: "必吃鐵路便當、百年檜木甜甜圈、阿嬤草仔粿。", icon: "utensils" },
+                    { time: "16:00", title: "返程嘉義市區", location: "台18線", type: "transport", desc: "下山車程約 1.5 小時，請開啟霧燈小心駕駛。", icon: "car" },
+                    { time: "18:00", title: "晚餐：竹居茶樓 或 盛食咖哩", location: "竹居茶樓", type: "food", desc: "江南庭園風港點或人氣印度咖哩，慰勞一天的辛勞。", icon: "utensils" },
+                ]
+            },
+            {
+                id: 3,
+                title: "Day 3",
+                theme: "民雄風情與故宮南院",
+                date: "Relax & Return",
+                description: "睡飽出發，走訪特色觀光工廠，享用鵝肉後悠閒返家。",
+                stats: { drive: "1.5 hr", cost: "~$1,300/2人" },
+                events: [
+                    { time: "09:30", title: "飯店早餐 & Check-out", location: "天成文旅-繪日之丘", type: "hotel", desc: "享受飯店設施與早餐。", icon: "coffee" },
+                    { time: "10:30", title: "旺萊山鳳梨文化園區", location: "旺萊山鳳梨文化園區", type: "spot", desc: "免費試吃鳳梨酥，或造訪鄰近的金桔觀光工廠。", icon: "sun" },
+                    { time: "12:00", title: "午餐：正宗民雄鵝肉亭", location: "正宗民雄鵝肉亭", type: "food", desc: "份量大、肉質鮮嫩，CP值極高。", icon: "utensils" },
+                    { time: "13:30", title: "故宮南院", location: "國立故宮博物院南部院區", type: "spot", desc: "戶外園區波波草、至美橋適合散步拍照。", icon: "camera" },
+                    { time: "15:30", title: "蒜頭糖廠 (選配)", location: "蒜頭糖廠蔗埕文化園區", type: "spot", desc: "若時間充裕可搭乘五分車。", icon: "train" },
+                    { time: "16:30", title: "啟程回高雄", location: "高雄市", type: "transport", desc: "帶著滿滿的回憶與伴手禮返家。", icon: "home" },
+                ]
+            }
+        ]
+    };
+
+    // --- Components ---
+
+    const Icon = ({ name, className }) => {
+        // Trigger icon creation after render
+        useEffect(() => {
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        }, [name]);
+        return <i data-lucide={name} className={className}></i>;
+    };
+
+    const GoogleMapButton = ({ location }) => {
+        const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+        return (
+            <a 
+                href={url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 mt-3 text-sm font-medium text-white transition-all duration-300 rounded-full bg-blue-600 hover:bg-blue-500 shadow-lg hover:shadow-blue-500/50 group"
+            >
+                <i data-lucide="map-pin" className="w-4 h-4 group-hover:animate-bounce"></i>
+                導航去這裡
+            </a>
+        );
+    };
+
+    const TimelineEvent = ({ event, index }) => {
+        const isLeft = index % 2 === 0;
+        
+        return (
+            <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group mb-8 w-full fade-in-up`} style={{animationDelay: `${index * 100}ms`}}>
+                {/* Center Line Dot */}
+                <div className="absolute left-4 md:left-1/2 w-4 h-4 bg-blue-500 rounded-full border-4 border-slate-900 transform -translate-x-1/2 z-10 shadow-[0_0_10px_rgba(59,130,246,0.8)]"></div>
+                
+                {/* Content Card */}
+                <div className={`w-[calc(100%-3rem)] md:w-[45%] ml-12 md:ml-0 glass-card p-6 rounded-2xl hover:border-blue-400/50 transition-all duration-300 hover:transform hover:-translate-y-1`}>
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="px-3 py-1 text-xs font-bold tracking-wider text-blue-300 uppercase bg-blue-900/30 rounded-full border border-blue-500/20">
+                            {event.time}
+                        </span>
+                        <div className="text-slate-400">
+                           <Icon name={event.icon} className="w-5 h-5" />
+                        </div>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-1">{event.title}</h3>
+                    <p className="text-slate-300 text-sm mb-4 leading-relaxed">{event.desc}</p>
+                    <GoogleMapButton location={event.location} />
+                </div>
+            </div>
+        );
+    };
+
+    const DayTab = ({ day, isActive, onClick }) => (
+        <button 
+            onClick={onClick}
+            className={`flex-1 py-4 text-center transition-all duration-300 border-b-2 ${isActive ? 'border-blue-500 text-blue-400 bg-blue-500/10' : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'}`}
+        >
+            <div className="text-lg font-bold">{day.title}</div>
+            <div className="text-xs opacity-70 hidden sm:block">{day.theme}</div>
+        </button>
+    );
+
+    const BackgroundCanvas = () => {
+        const canvasRef = useRef(null);
+
+        useEffect(() => {
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            let animationFrameId;
+
+            const resizeCanvas = () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            };
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // Particles
+            const particles = [];
+            const particleCount = 40;
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.2;
+                    this.vy = (Math.random() - 0.5) * 0.2;
+                    this.size = Math.random() * 3;
+                    this.color = `rgba(${100 + Math.random() * 100}, ${150 + Math.random() * 105}, 255, ${Math.random() * 0.3})`;
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    if (this.x < 0) this.x = canvas.width;
+                    if (this.x > canvas.width) this.x = 0;
+                    if (this.y < 0) this.y = canvas.height;
+                    if (this.y > canvas.height) this.y = 0;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+
+            const animate = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw subtle gradient background
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#0f172a'); // slate-900
+                gradient.addColorStop(1, '#1e293b'); // slate-800
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+
+                animationFrameId = requestAnimationFrame(animate);
+            };
+
+            animate();
+
+            return () => {
+                window.removeEventListener('resize', resizeCanvas);
+                cancelAnimationFrame(animationFrameId);
+            };
+        }, []);
+
+        return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full -z-10" />;
+    };
+
+    const App = () => {
+        const [activeDay, setActiveDay] = useState(0);
+
+        useEffect(() => {
+            // Re-run lucide icons whenever the day changes (content updates)
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        }, [activeDay]);
+
+        return (
+            <div className="min-h-screen relative pb-20">
+                <BackgroundCanvas />
+                
+                {/* Header */}
+                <header className="relative pt-20 pb-10 px-6 text-center z-10">
+                    <div className="inline-block p-2 px-4 rounded-full border border-blue-400/30 bg-blue-500/10 backdrop-blur-md mb-4 fade-in-up">
+                        <span className="text-blue-300 font-medium tracking-wide text-sm">Vibe Coding Travel</span>
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-teal-200 to-emerald-300 mb-4 fade-in-up" style={{animationDelay: '100ms'}}>
+                        {tripData.title}
+                    </h1>
+                    <p className="text-slate-400 max-w-xl mx-auto text-lg fade-in-up" style={{animationDelay: '200ms'}}>
+                        {tripData.subtitle}
+                    </p>
+                </header>
+
+                {/* Day Navigation */}
+                <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-lg border-b border-slate-700/50 mb-10">
+                    <div className="max-w-4xl mx-auto flex justify-between">
+                        {tripData.days.map((day, index) => (
+                            <DayTab 
+                                key={day.id} 
+                                day={day} 
+                                isActive={activeDay === index} 
+                                onClick={() => setActiveDay(index)} 
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Content */}
+                <main className="max-w-4xl mx-auto px-6 z-10 relative min-h-[600px]">
+                    <div key={activeDay} className="animate-in fade-in zoom-in duration-500">
+                        
+                        {/* Summary Stats */}
+                        <div className="flex justify-center gap-6 mb-12 text-sm text-slate-400">
+                            <div className="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-lg">
+                                <i data-lucide="clock" className="w-4 h-4 text-emerald-400"></i>
+                                車程: {tripData.days[activeDay].stats.drive}
+                            </div>
+                            <div className="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-lg">
+                                <i data-lucide="wallet" className="w-4 h-4 text-amber-400"></i>
+                                預算: {tripData.days[activeDay].stats.cost}
+                            </div>
+                        </div>
+
+                        {/* Timeline */}
+                        <div className="relative">
+                            {/* Vertical Line */}
+                            <div className="absolute left-4 md:left-1/2 w-0.5 h-full timeline-line transform md:-translate-x-1/2 opacity-30"></div>
+                            
+                            {tripData.days[activeDay].events.map((event, index) => (
+                                <TimelineEvent key={index} event={event} index={index} />
+                            ))}
+                        </div>
+
+                        {/* Bottom Note */}
+                        <div className="mt-16 p-6 glass-card rounded-xl text-center">
+                            <h4 className="text-blue-300 font-bold mb-2">貼心小提醒</h4>
+                            <p className="text-slate-400 text-sm">
+                                {activeDay === 1 ? '阿里山午後易起霧，請務必開啟霧燈並小心駕駛。山上溫差大，記得攜帶保暖衣物。' : 
+                                 activeDay === 0 ? '御香屋建議提前電話預訂，以免現場久候。夜市人潮多，建議保管好隨身物品。' : 
+                                 '民雄鵝肉亭份量較大，建議適量點餐。回程請注意國道車況。'}
+                            </p>
+                        </div>
+                    </div>
+                </main>
+
+                <footer className="mt-20 text-center text-slate-600 text-sm pb-10">
+                    <p>© 2024 Gemini Travel Planner. Built with Vibe.</p>
+                </footer>
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>
